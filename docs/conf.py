@@ -17,8 +17,8 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'boost-r'
-copyright = '2022, Xi Jiang'
+project = 'iIMPACT'
+copyright = '2023, Xi Jiang'
 author = 'Xi Jiang'
 
 
