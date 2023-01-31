@@ -1,14 +1,12 @@
-.. boost-r documentation master file, created by
+.. iIMPACT documentation master file, created by
    sphinx-quickstart on Fri Apr  8 14:45:30 2022.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-boost R Package
+iIMPACT
 ==========================
 
-Authors: Xi Jiang, Danni Luo, Esteban F. Morales, Jie Yang, Huimin Li, Yuanchun Zhan, Bo Yao, Suhana Bedi, Qiwei Li, Guanghua Xiao and Xiaowei Zhan
-
-The R package boost (Bayesian Modeling of Spatial Transcriptomics Data) provides a collection of functions to detect spatially variable (SV) genes in spatial transcriptomics (ST) data. This package provides two novel Bayesian methods, as well as other standard procedures, for facilitating studies in `Spatial Transcriptomics Arena (STAr) <https://lce.biohpc.swmed.edu/star/>`_ .
+iIMPACT is a novel method which integrates image and molecular profiles for spatial transcriptomics analysis. It is a multi-stage statistical method for spatial domain identification and domain-specific spatially variable gene detection. It utilizes an interpretable Bayesian finite mixture model for analyzing the cellular spatial organization and a regression model for domain-specific spatially variable gene analysis. Compared with existing methods for spatial transcriptomics data analysis, iIMPACT fully leverages the biological features from histology image, which causes compromised algorithm accuracy and the interpretability of histological characterization of single cells on domain level. iIMPACT provides a highly accurate and interpretable clustering approach to reveal cellular spatial organization and functional gene landscape from spatial transcriptomics data.
 
 .. figure:: website.png
     :align: center
@@ -18,10 +16,6 @@ The R package boost (Bayesian Modeling of Spatial Transcriptomics Data) provides
    :maxdepth: 2
    :caption: Contents:
 
-   installation
-   loaddata
-   preprocessing
-   sv_gene_detection
-   simulation
+   
 
 
