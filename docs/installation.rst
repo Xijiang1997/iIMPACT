@@ -16,7 +16,7 @@ To implement iIMPACT function, you must make sure that the following packages ar
     library(scater)
     library(scran)
 
-Load functions used to run iIMPACT.::
-
+Load functions used to run iIMPACT.
+::
     source('R/iIMPACT_functions.R')
 
