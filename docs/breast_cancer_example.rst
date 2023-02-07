@@ -147,7 +147,7 @@ After obtaining the posterior samples of Bayesian mixture model via the 'run_iIM
 
 .. figure:: plot_bc_domain.png
     :align: center
-    :figwidth: 200px
+    :figwidth: 100px
 
 
 Get domain-level cell proportion: each row is the cell-type proportion for the corresponding domain (cluster)
@@ -178,7 +178,7 @@ Get interactive zones: spots with high uncertainty on domain assignment.
 
 .. figure:: plot_bc_interactive.png
     :align: center
-    :figwidth: 200px
+    :figwidth: 100px
 
 Refine spatial domain results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -194,6 +194,6 @@ iIMPACT provides an optional refinement step for the spatial domain identificati
       
 .. figure:: plot_bc_domain_refine.png
     :align: center
-    :figwidth: 200px
+    :figwidth: 100px
 
 
