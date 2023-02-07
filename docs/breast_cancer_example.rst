@@ -8,7 +8,7 @@ Load Data
 
 The current version of iIMPACT requires three input data: 
 
-* The gene expression count matrix 'count': :math:`n\times p` (:math:`n` - number of spots; :math:`p` - number of genes)
+* The gene expression count matrix 'count': :math:`n\\times p` (:math:`n` - number of spots; :math:`p` - number of genes)
 * The location information matrix 'loc': :math:`n\times 2`. It includes the x and y coordinate for each sample point.
 * The nuclei identification information matrix 'cell_info': :math:`m\times 3`. It includes the x and y coordinate and the nuclei class for identified cells.
 
