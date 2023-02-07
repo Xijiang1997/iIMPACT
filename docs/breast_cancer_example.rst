@@ -8,9 +8,9 @@ Load Data
 
 The current version of iIMPACT requires three input data: 
 
-* The gene expression count matrix 'count': :math:`n\\times p` (:math:`n` - number of spots; :math:`p` - number of genes)
-* The location information matrix 'loc': :math:`n\times 2`. It includes the x and y coordinate for each sample point.
-* The nuclei identification information matrix 'cell_info': :math:`m\times 3`. It includes the x and y coordinate and the nuclei class for identified cells.
+* The gene expression count matrix 'count': :raw-latex:`\(n\times p\)` (:math:`n` - number of spots; :math:`p` - number of genes)
+* The location information matrix 'loc': :raw-latex:`\(n\times 2\)`. It includes the x and y coordinate for each sample point.
+* The nuclei identification information matrix 'cell_info': :raw-latex:`\(m\times 3\)`. It includes the x and y coordinate and the nuclei class for identified cells.
 
 The first two data should be stored in R matrix format. For gene expression count matrix, column names should be gene names. 
 
@@ -75,7 +75,7 @@ We process the nuclei segmentation results from the HD staining model to the cel
 
 For the pathology image, the model identified 156,235 nuclei with 7 cell types. 
 
-The obtained cell abundance data :math:`V` has dimension :math:`2518\times 7` (:math:`n\times q` matrix, :math:`q` is the number of cell types).
+The obtained cell abundance data :math:`V` has dimension :raw-latex:`\(2518\times 7\)` (:raw-latex:`\(n\times q\)` matrix, :math:`q` is the number of cell types).
 
 Generate low-dimensional representation of molecular profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
