@@ -8,8 +8,8 @@ Load Data
 
 For data generated from imaging-based techniques, the current version of iIMPACT requires two input data: 
 
-* The gene expression count matrix 'count': :math:`m\times p` (:math:`m` - number of cells; :math:`p` - number of genes)
-* The location and cell type information matrix 'cell_info': :math:`m\times 3`. It includes the x and y coordinate, and the cell type for each cell.
+* The gene expression count matrix 'count': :math:`m` by :math:`p` (:math:`m` - number of cells; :math:`p` - number of genes)
+* The location and cell type information matrix 'cell_info': :math:`m` by :math:`3`. It includes the x and y coordinate, and the cell type for each cell.
 
 These two data should be stored in R matrix format. For gene expression count matrix, column names should be gene names. 
 
@@ -30,7 +30,7 @@ https://www.dropbox.com/scl/fo/em51owbpda4id0rnnin1x/h?dl=0&rlkey=nk9kc38ghs9wdj
         print(dim(cell_info))
         ## [1] 1207    3
 
-This mouse visual cortex STARmap data has dimension 1207 cells and 1020 genes.
+This mouse visual cortex STARmap data has dimension 1,207 cells and 1,020 genes.
 
 Process Data
 -------------------------------
@@ -105,8 +105,8 @@ After obtaining the posterior samples of Bayesian mixture model via the 'run_iIM
         spatial_domain_cell <- get_cell_spatial_domain(spatial_domain, cell_assignment)
 
         # plot results at single cell level
-        df <- data.frame(x = cell_info$y, y = cell_info$x, domain = spatial_domain_cell)
-        ggplot(df, aes(x = x, y = y, color = as.factor(domain))) +           
+        df <- data.frame(x = cell_info$y, y = cell_info$x, domain = as.factor(spatial_domain_cell))
+        ggplot(df, aes(x = x, y = y, color = domain)) +           
           geom_point()
 
 .. figure:: plot_starmap_domain.png
