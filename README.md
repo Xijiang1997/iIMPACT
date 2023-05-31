@@ -14,5 +14,8 @@ With iIMPACT, you can:
 ![flowchart](flowchart.png)
 
 ## Tutorial
-For the step-by-step tutorial, please refer to:
+For the step-by-step tutorial, please refer to: 
+<br>
+https://iimpact.readthedocs.io/en/latest/
+<br>
 
