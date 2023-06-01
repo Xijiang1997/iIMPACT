@@ -1,9 +1,9 @@
 Installation
 ==========================
 
-iIMPACT provides a novel method for spatial domain identification in spatial transcriptomics (ST) data, which integrates image and molecular profiles to improve the domain identification accuracy. 
+iIMPACT provides a novel method for spatial domain identification in spatially resolved transcriptomics (SRT) data, which integrates image and molecular profiles to improve the domain identification accuracy. It also has the ability to detect domain-specific spatially variable genes via a negative binomial regression model.
 
-To implement iIMPACT function, you must make sure that the following packages are already installed. ::
+To implement iIMPACT function, you need to make sure that the following packages are already installed. ::
 
     library(ggplot2)
     library(Rcpp)
