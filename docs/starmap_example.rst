@@ -53,7 +53,7 @@ The first step to handle the imaging-based SRT data is to manually add grids wit
 
 .. figure:: plot_starmap_grid.png
     :align: center
-    :figwidth: 200px
+    :figwidth: 1000px
 
 Generate cell abundance, low-dimensional representation of molecular profiles, and neighborhood information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,7 +110,7 @@ After obtaining the posterior samples of Bayesian mixture model via the `run.iIM
 
 .. figure:: plot_starmap_domain.png
     :align: center
-    :figwidth: 200px
+    :figwidth: 1000px
 
 
 
