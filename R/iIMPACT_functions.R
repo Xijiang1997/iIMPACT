@@ -15,6 +15,7 @@ library(LaplacesDemon)
 library(SingleCellExperiment)
 library(scater)
 library(scran)
+library(MASS)
 
 # Summarize neighborhood information: Extract the indices of all neighbors for each spot
 # loc: a n*2 matrix for x and y coordinates of spots, where n is the number of spots
@@ -53,7 +54,7 @@ get.neighbor <- function(loc, n_neighbor){
 # spot_loc: a n*2 matrix for x and y coordinates of spots
 # lattice: lattice type, 'hexagon' or 'square'
 
-get_cell_abundance <- function(cell_loc, cell_type, spot_loc, lattice = 'hexagon'){
+get.cell.abundance <- function(cell_loc, cell_type, spot_loc, lattice = 'hexagon'){
   
   n_cell <- dim(cell_loc)[1]
   n_spot <- dim(spot_loc)[1]
@@ -99,7 +100,7 @@ get_cell_abundance <- function(cell_loc, cell_type, spot_loc, lattice = 'hexagon
 # Process the gene expression count matrix: Normalize and get the low-dimensional representation of gene expression profile via PCA
 # count: a n*p matrix for gene expression counts, where n is the number of spots and p is the number of genes
 # n_PC: number of principle components for the gene expression profile
-process_gene_expression <- function(count, n_PC = 3, n_HVG = 2000){
+process.gene.expression <- function(count, n_PC = 3, n_HVG = 2000){
   n_gene <- ncol(count)
   n_spot <- nrow(count)
   
@@ -126,6 +127,80 @@ process_gene_expression <- function(count, n_PC = 3, n_HVG = 2000){
   return(Y)
 }
 
+
+# Create square lattice for imaging-based SRT data
+# cell_info: a m*3 matrix for x and y coordinates, and the cell type for all cells measured on the tissue, where m is the number of cells.
+# size: grid size to create the lattice
+create.grid <- function(cell_info, size = NULL){
+  
+  n_cell <- dim(cell_info)[1]
+  if (is.null(size)){
+    size <- round(mean(c((max(cell_info[, 'x']) - min(cell_info[, 'x'])) / 15, (max(cell_info[, 'y']) -min(cell_info[, 'y'])) / 15)))
+  }
+  x_total <- floor(max(cell_info[, 'x']) / size) + 1
+  y_total <- floor(max(cell_info[, 'y']) / size) + 1
+  
+  new_loc <- NULL
+  k <- 1
+  cell_assignment <- numeric(n_cell)
+  
+  for (i in 1:x_total){
+    for (j in 1:y_total){
+      
+      cell_list <- c()
+      
+      for (ii in 1:n_cell){
+        if (cell_info[ii, 'x'] >= (i - 1)*size & cell_info[ii, 'x'] <  i * size){
+          if (cell_info[ii, 'y'] >= (j - 1)*size  & cell_info[ii, 'y'] < j * size){
+            cell_list <- c(cell_list, ii)
+          }
+        }
+      }
+      if (length(cell_list) > 0){
+        x_mid <- round((2 * i - 1)/2*size)
+        y_mid <- round((2 * j - 1)/2*size)
+      
+        new_loc <- rbind(new_loc, c(x_mid, y_mid))
+        cell_assignment[cell_list] <- k
+        k <- k + 1
+        }
+    }
+  }
+  colnames(new_loc) <- c('x', 'y')
+  
+  return(list(spot_loc = new_loc, cell_assignment = cell_assignment))
+}
+
+# Process the gene expression count matrix and cell information for imaging_based SRT data
+# Generate cell abundance and low-dimensional representation of gene expression profile via PCA on spot level
+# count: a m*p matrix for gene expression counts, where m is the number of cells and p is the number of genes
+# cell_info: a m*3 matrix for x and y coordinates, and the cell type for all cells measured on the tissue, where m is the number of cells.
+# cell_assignment: results from create_grid function
+# n_PC: number of principle components for the gene expression profile
+process.imaging.based.SRT <- function(count, cell_info, cell_assignment, n_PC = 3){
+  n_spot <- max(cell_assignment)
+  cell_type <- cell_info[ ,3]
+  Y_cell <- process_gene_expression(count, n_PC)
+  
+  cell_names <- unique(cell_type)
+  V <- matrix(0, ncol = length(cell_names) , nrow = n_spot)
+  colnames(V) <- cell_names
+  Y <- matrix(0, ncol = n_PC , nrow = n_spot)
+  
+  for (i in 1:n_spot){
+    for (j in which(cell_assignment == i)){
+      V[i, cell_type[j]] <- V[i, cell_type[j]] + 1
+    }
+    if (length(which(cell_assignment == i)) > 1){
+      Y[i, ] <- apply(Y_cell[cell_assignment == i,], 2, mean)
+    }
+    else {Y[i, ] <- Y_cell[which(cell_assignment == i),]}
+  }
+  
+  return(list(Y = Y, V = V))
+}
+
+
 # run iIMPACT
 # V: spot-level cell abundance (n*q matrix, q is the number of cell types)
 # Y: low-dimensional representation of gene expression profile via PCA
@@ -133,7 +208,7 @@ process_gene_expression <- function(count, n_PC = 3, n_HVG = 2000){
 # n_cluster: number of spatial domains
 # w: scaling parameter for image profile
 # label_switch_refer, an index of column for label switching, usually choose column index of tumor cell type
-run_iIMPACT <- function(V, Y, G, n_cluster, w, label_switch_refer = 1){
+run.iIMPACT <- function(V, Y, G, n_cluster, w = 1/20, label_switch_refer = 1){
   n_spot <- nrow(Y)
   n_cell_type <- ncol(V)
   n_PC <- ncol(Y)
@@ -183,14 +258,26 @@ run_iIMPACT <- function(V, Y, G, n_cluster, w, label_switch_refer = 1){
 }
 
 # Get spatial domain identification results
-get_spatial_domain <- function(result){
+get.spatial.domain <- function(result){
   Z_p <- result[['Z']]
   spatial_domain <- apply(Z_p, 2, getmode)
   return(spatial_domain)
 }
 
+# Get spatial domain identification results at single-cell resolution
+get.cell.spatial.domain <- function(spatial_domain, cell_assignment){
+  n_cell <- length(cell_assignment)
+  n_spot <- length(spatial_domain)
+  
+  spatial_domain_cell <- numeric(n_cell)
+  for (i in 1:n_spot){
+    spatial_domain_cell[cell_assignment == i] <- spatial_domain[i]
+  }
+  return(spatial_domain_cell)
+}
+
 # Get domain-level cell proportion
-get_domian_cell_prop <- function(result){
+get.domian.cell.prop <- function(result){
   omega_p <- result[['omega']]
   domain_cell_proportion <- apply(omega_p, c(2, 3), median)
   colnames(domain_cell_proportion) <- result[['cell_type']]
@@ -200,7 +287,7 @@ get_domian_cell_prop <- function(result){
 
 # Get interactive zone
 # prop_cut: threshold to define interactive zone
-get_interactive_zone <- function(result, prop_cut = 0.9){
+get.interactive.zone <- function(result, prop_cut = 0.9){
   Z_p <- result[['Z']]
   K <- result[['n_cluster']]
   Z_prop <- matrix(0, ncol = K, nrow = ncol(Z_p))
@@ -215,8 +302,156 @@ get_interactive_zone <- function(result, prop_cut = 0.9){
   return(interactive_zone)
 }
 
+# function to refine the clustering results
+# P: Extracted indices of all neighbors for each spot from get.neighbor function
+# cluster: vector of spatial domain result
+# area_unit: the threshold of number of spots for small area
+refine.cluster <- function(P, cluster, area_unit = 1){
+  n_spot <- nrow(P)
+  visited <- rep(0, n_spot)
+  connected_area <- list()
+  k <- 1
+  # bfs to find all connected areas
+  for (i in 1:n_spot){
+    if (visited[i] == 0){
+      visited[i] <- 1
+      temp <- c(i)
+      now_cluster <- cluster[i]
+      now_area_list <- c(i)
+      while (length(temp) > 0){
+        now <- temp[1]
+        temp <- temp[-1]
+        for (j in P[now, ]){
+          if (j != 0){
+            if (visited[j] == 0 & cluster[j] == now_cluster){
+              visited[j] <- 1
+              now_area_list <- c(now_area_list, j)
+              temp <- c(temp, j)
+            }
+          }
+        }
+      }
+      connected_area[[k]] <- now_area_list
+      k <- k + 1
+    }
+  }
+  
+  n_area <- length(connected_area)
+  
+  # change the cluster for small areas
+  cluster_new <- cluster
+  for (i in 1:n_area){
+    now_area_list <- connected_area[[i]]
+    if (length(now_area_list) <= area_unit){
+      # find all neighbors of the current connected area
+      neighbor_list <- c()
+      for (j in now_area_list){
+        neighbor_list <- c(neighbor_list, P[j, P[j, ]!= 0])
+      }
+      neighbor_list <- setdiff(neighbor_list, now_area_list)
+      # cluster of neighbor spots
+      neighbor_cluster <- unique(cluster[neighbor_list])
+      if (length(neighbor_cluster) == 1){
+        cluster_new[now_area_list] <- neighbor_cluster[1]
+      }}}
+  return(cluster_new)
+}
 
+# Filter out genes with a high proportion of zero counts
+# count: a n*p matrix for gene expression counts, where n is the number of spots and p is the number of genes
+# min_percentage: gene with non-zero expression proportion <= min_percentage will be filtered out.
+#####################
+filter.count <- function(count, min_percentage = 0.1){
+  gene_num <- ncol(count)
+  sample_num <- nrow(count)
+  min_total <- 0
 
+  if (sum(colSums(count == 0) > (1-min_percentage)*sample_num) > 0){
+    count_f <- count[,-(which(colSums(count == 0) > (1-min_percentage)*sample_num))]
+    }
+    else{
+      count_f <- count
+    }
+  
+  return(count_f)
+}
+
+# Get the estimated size factor
+# count: the n*p matrix for gene expression counts, where n is the number of spots and p is the number of genes
+# norm_method: the method to calculate size factor. Choices include 'tss', 'q75', and 'rle'. For details, please refer paper https://onlinelibrary.wiley.com/doi/10.1002/sim.9530
+get.size.factor <- function(count, norm_method = 'tss'){
+  gene_num <- ncol(count)
+  sample_num <- nrow(count)
+  
+  count_rowsum <- rowSums(count)
+  
+  if(norm_method == "tss")
+  {
+    ## TSS(Total Sum Scaling)
+    ### scale-factors
+    raw_s_factors <- rowSums(count)/mean(rowSums(count))
+  }
+  else if(norm_method == "q75")
+  {
+    ## Q75(Upper Quantile normalization)
+    ### scale factors
+    count_q75 <- apply(count, 1,function(x){quantile(x[x>0],0.75)} )
+    count_N <- rowSums(count)/nrow(count)
+    raw_s_factors <- count_q75/count_N
+  }
+  else if(norm_method == "rle")
+  {
+    ## RLE(Relative Log Expression normalization)
+    ### scale_factors
+    ### function for calculating the geometric mean
+    geo_mean <- function(x){
+      exp(sum(log(x[x>0]))/length(x))
+    }
+    ### function for calculating non-zero median
+    non_zero_median <- function(x){
+      median(x[x>0])
+    }
+    ref_sample <- apply(count, 2, geo_mean)
+    norm_rle_1 <- sweep(count, 2, ref_sample, FUN = "/")
+    raw_s_factors <- apply(as.matrix(norm_rle_1), 1, non_zero_median)
+  }
+  else{
+    stop("Please choose a valid normalization method")
+  }
+  return(raw_s_factors)
+}
+
+# Fit negative binomial regression for domain-specific spatially variable detection
+# count: the n*p matrix for gene expression counts, where n is the number of spots and p is the number of genes
+# spatial_domain: identified spatial domain from 'get.spatial.domain' or 'refine.cluster' function.
+# domain_index: index of the target domain
+# si: estimated size factor from 'get.size.factor' function.
+detect.domainSVG <- function(count, spatial_domain, domain_index, si){
+  n_gene <- ncol(count)
+  x <- spatial_domain == domain_index
+  if (sum(x) == 0){
+    stop('Please enter a valid domain index.')
+  }
+  results <- data.frame(gene = colnames(count), beta = rep(0, n_gene), p_value = rep(1, n_gene))
+  c <- 0
+  for (jj in 1:n_gene){
+    data_temp <- data.frame(y = count[, jj], si = si, x = x)
+    if (sum(data_temp$y == 0) > 2){
+      suppressWarnings(m1 <- glm.nb(y ~ x + offset(log(si)), data = data_temp))
+      rr <- summary(m1)
+      results$p_value[jj] <- rr$coefficients[2, 4]
+      results$beta[jj] <- rr$coefficients[2, 1]
+      
+      if (floor(jj*100/n_gene) == c)
+      {
+        print(paste0(c, '% has been done'))
+        c <- c + 10
+      }
+    }
+  }
+  results$adjusted_p_value <- p.adjust(results$p_value, 'BH')
+  return(results)
+}
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 
 # Helper functions
