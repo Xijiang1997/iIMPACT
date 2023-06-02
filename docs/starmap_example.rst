@@ -1,7 +1,10 @@
 Example - Mouse Visual Cortex STARmap Data
 ==========================
 
-This dataset was generated from an imaging-based spatial molecular profiling technology platform with a resolution of single-cell level. 
+This dataset was generated from an imaging-based SRT technology platform with a resolution of single-cell level. 
+
+Data can be downloaded from 'data' folder on the Dropbox: 
+https://www.dropbox.com/scl/fo/em51owbpda4id0rnnin1x/h?dl=0&rlkey=nk9kc38ghs9wdjpqno7k3e1qp
 
 Load Data
 ----------------------------
@@ -12,9 +15,6 @@ For data generated from imaging-based techniques, the current version of iIMPACT
 * The location and cell type information matrix 'cell_info': :math:`m` by :math:`3`. It includes the x and y coordinate, and the cell type for each cell.
 
 These two data should be stored in R matrix format. For gene expression count matrix, column names should be gene names. 
-
-Data can be downloaded from 'data' folder on the Dropbox: 
-https://www.dropbox.com/scl/fo/em51owbpda4id0rnnin1x/h?dl=0&rlkey=nk9kc38ghs9wdjpqno7k3e1qp
 ::
         # read data
         starmap_data <- read.csv('data/mouse visual cortex STARmap data/mouse_visual_cortex_STARmap.csv')
@@ -35,7 +35,7 @@ This mouse visual cortex STARmap data has dimension 1,207 cells and 1,020 genes.
 Process Data
 -------------------------------
 
-Before run iIMPACT for spatial domain identification, there are several steps to prepare the data. iIMPACT conduct clustering on spot level, so we need to create a grid lattice and assign each cell to the corresponding spot.
+Before running iIMPACT for spatial domain identification, there are several steps to prepare the data. iIMPACT conducts clustering on spot level, so we need to create a grid lattice and assign each cell to the corresponding spot.
 
 Create grid
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -57,7 +57,7 @@ The first step to handle the imaging-based SRT data is to manually add grids wit
 
 Generate cell abundance, low-dimensional representation of molecular profiles, and neighborhood information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-After creating grids, we obtain cell abundance data :math:`V` as the counts of cells with different types in each square area. For single-cell level molecular profiles, we normalized, transformed, and reduced the dimension of the gene expression counts following the same steps for data from sequencing-based techniques. Low-dimensional gene expression profiles :math:`Y` were then transformed to the spot level by averaging across all cells in each spot. 
+After creating grids, we obtain cell abundance data :math:`V` as the counts of cells with different types in each square area. For single-cell level molecular profiles, we normalize, transforme, and reduce the dimension of the gene expression counts following the same steps for data from sequencing-based techniques. Low-dimensional gene expression profile :math:`Y` is then transformed to the spot level by averaging across all cells in each spot. 
 ::
         # Generate cell abundance and low-dimensional representation of molecular profiles
         data_for_iIMPACT <- process.imaging.based.SRT(count, cell_info, cell_assignment, n_PC = 3)
@@ -74,7 +74,7 @@ Spatial Domain Identification
 Run finite mixture model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-'iIMPACT.ru ' function requires the cell abundance data from image profile :math:`V`, molecular profile :math:`Y` and neighborhood information :math:`G` as input. We also need to set two parameters: the number of domains (clusters) ‘n_cluster’, and the scaling parameter to control the contribution of image profile ‘w’ (set as 0.5). After fitting the finite mixture model, a label switching step is necessary. 
+`run.iIMPACT` function requires the cell abundance data from image profile :math:`V`, molecular profile :math:`Y` and neighborhood information :math:`G` as input. We also need to set two parameters: the number of domains (clusters) ‘n_cluster’, and the scaling parameter to control the contribution of image profile ‘w’ (set as 0.5). After fitting the finite mixture model, a label switching step is necessary. 
 ::
         # set number of clusters
         K <- 7
@@ -82,9 +82,8 @@ Run finite mixture model
         # set the scaling parameter for image profile
         w <- 1/2
 
-
         # run iIMPACT
-        result <- iIMPACT.run(V, Y, G, n_cluster = K, w)
+        result <- run.iIMPACT(V, Y, G, n_cluster = K, w)
         ## 10% has been done
         ## 20% has been done
         ## 30% has been done
@@ -99,7 +98,7 @@ Run finite mixture model
 Characterize identified spatial domains
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After obtaining the posterior samples of Bayesian mixture model via the 'iIMPACT.run' function, we can obtain the spatial domain identification results via the 'get.spatial.domain' function. Note that this clustering result is at spot level. To project the results back to single cell level, we need to use the 'get.cell.spatial.domain' function.
+After obtaining the posterior samples of Bayesian mixture model via the `run.iIMPACT` function, we can obtain the spatial domain identification results via the `get.spatial.domain` function. Note that this clustering result is at spot level. To project the results back to single cell level, we need to use the `get.cell.spatial.domain` function.
 ::
         spatial_domain <- get.spatial.domain(result)
         spatial_domain_cell <- get.cell.spatial.domain(spatial_domain, cell_assignment)
