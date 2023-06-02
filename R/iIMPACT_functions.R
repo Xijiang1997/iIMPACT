@@ -277,7 +277,7 @@ get.cell.spatial.domain <- function(spatial_domain, cell_assignment){
 }
 
 # Get domain-level cell proportion
-get.domian.cell.prop <- function(result){
+get.domain.cell.prop <- function(result){
   omega_p <- result[['omega']]
   domain_cell_proportion <- apply(omega_p, c(2, 3), median)
   colnames(domain_cell_proportion) <- result[['cell_type']]
