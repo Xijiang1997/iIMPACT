@@ -1,7 +1,7 @@
 Example - Human Breast Cancer 10x Visium Data
 ===============================
 
-In the following, we choose the human breast cancer FFPE data from 10x Visium platform to display the implementation of iIMPACT on the sequencing-based SRT data. 
+In the following, we choose the human breast cancer FFPE data from 10x Visium platform as an example to display the implementation of iIMPACT on the sequencing-based SRT data. 
 
 Load Data
 ------------------------------------------
@@ -13,8 +13,6 @@ The current version of iIMPACT requires three input data:
 * The nuclei identification information matrix 'cell_info': :math:`m` by :math:`3`. It includes the x and y coordinate and the nuclei class for identified cells.
 
 The first two data should be stored in R matrix format. For gene expression count matrix, column names should be gene names. 
-
-In the following, we conduct the analysis on 10x Visium human breast cancer FFPE data and  as two examples to show the functions for the implementation of iIMPACT. 
 
 Files can be downloaded from 'data' folder on the Dropbox: 
 https://www.dropbox.com/scl/fo/em51owbpda4id0rnnin1x/h?dl=0&rlkey=nk9kc38ghs9wdjpqno7k3e1qp
@@ -48,7 +46,7 @@ We process the nuclei segmentation results from the HD staining model to the cel
 ::
     cell_loc <- cell_info[, c('x', 'y')]
     cell_type <- cell_info$nucleus_class
-    V <- get_cell_abundance(cell_loc, cell_type, spot_loc, lattice = 'hexagon')
+    V <- get.cell.abundance(cell_loc, cell_type, spot_loc, lattice = 'hexagon')
     ## [1] "0% has been done"
     ## [1] "10% has been done"
     ## [1] "20% has been done"
@@ -73,14 +71,14 @@ We process the nuclei segmentation results from the HD staining model to the cel
     ## [5,]     63        1         63    19     0                 0          0
     ## [6,]     86        1         70    19     0                 0          0
 
-For the pathology image, the model identified 156,235 nuclei with 7 cell types. 
+For the histology image, the model identified 156,235 nuclei with 7 cell types. 
 
 The obtained cell abundance data :math:`V` has dimension 2,518 by 7 (:math:`n` by :math:`q` matrix, :math:`q` is the number of cell types).
 
 Generate low-dimensional representation of molecular profiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before fitting the finite mixture model, the raw gene expression counts were normalized and transformed to the logarithmic scale. We selected the normalized expression levels of top 2,000 highly variable genes and did the dimensionality reduction to reduce the dimension using principal component analysis (PCA). Here we set the reduced dimension to be 3. 
+Before fitting the finite mixture model, the raw gene expression counts need to be normalized and transformed to the logarithmic scale. We select the normalized expression levels of top 2,000 highly variable genes and do the dimensionality reduction to reduce the dimension using principal component analysis (PCA). Here we set the reduced dimension to be 3. 
 ::
     Y <- process.gene.expression(count, n_PC = 3)
 
@@ -99,7 +97,7 @@ Before fitting the finite mixture model, the raw gene expression counts were nor
 Generate neighborhood information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Instead of coordinates, iIMPACT method requires the neighbor information of spots. We apply get.neighbor function to generate the neighbor information. Sample points for this data are located on a hexagon lattice, so each spots has 6 neighbors. 
+Instead of spot coordinates, iIMPACT requires the neighbor information of spots. We apply `get.neighbor` function to generate the neighbor information. Sample points for this data are located on a hexagon lattice, so each spots has 6 neighbors. 
 ::
     G <- get.neighbor(spot_loc, 6)
 
@@ -110,9 +108,9 @@ Spatial Domain Identification
 Run Bayesian normal-multinomial mixture model
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-'run_iIMPACT' function requires the cell abundance data from image profile :math:`V`, molecular profile :math:`Y` and neighborhood information :math:`G` as input.  We also need to set two parameters: the number of domains (clusters) 'n_cluster', and the scaling parameter to control the contribution of image profile 'w'. 
+`run.iIMPACT` function requires the cell abundance data from image profile :math:`V`, molecular profile from SRT data :math:`Y` and neighborhood information :math:`G` as input.  We also need to set two parameters: the number of domains (clusters) 'n_cluster', and the scaling parameter to control the contribution of image profile 'w'. 
 
-After fitting the finite mixture model, a label switching step is necessary. We can specify a cell-type as the reference of label switching and pass the corresponding column index in :math:`V` to the function via the 'label_switch_refer' parameter. The default index is 1.
+After fitting the finite mixture model, a label switching step is necessary. We can specify a cell type as the reference of label switching and pass the corresponding column index in :math:`V` to the function via the 'label_switch_refer' parameter. The default index is 1.
 ::
     # set number of clusters
     K <- 5
@@ -121,7 +119,7 @@ After fitting the finite mixture model, a label switching step is necessary. We 
     w <- 1/20
 
     # run iIMPACT
-    result <- iIMPACT.run(V, Y, G, n_cluster = K, w)
+    result <- run.iIMPACT(V, Y, G, n_cluster = K, w)
     ## 10% has been done
     ## 20% has been done
     ## 30% has been done
@@ -136,9 +134,9 @@ After fitting the finite mixture model, a label switching step is necessary. We 
 Characterize identified spatial domains
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After obtaining the posterior samples of Bayesian mixture model via the 'run_iIMPACT' function, we can obtain the spatial domain identification results via the 'get_spatial_domain' function.
+After obtaining the posterior samples of Bayesian mixture model via the `run.iIMPACT` function, we can obtain the spatial domain identification results via the `get.spatial.domain` function.
 ::
-    spatial_domain <- get.spatialdomain(result)
+    spatial_domain <- get.spatial.domain(result)
 
     # plot results
     df <- data.frame(x = spot_loc$x, y = spot_loc$y, domain = as.factor(spatial_domain))
@@ -150,9 +148,9 @@ After obtaining the posterior samples of Bayesian mixture model via the 'run_iIM
     :figwidth: 100px
 
 
-Get domain-level cell proportion: each row is the cell-type proportion for the corresponding domain (cluster)
+Get domain-level cell proportion: each row is the cell-type proportion for the corresponding domain (cluster).
 ::
-    domain_cell_prop <- get.domaincellprop(result)
+    domain_cell_prop <- get.domain.cell.prop(result)
 
     print(domain_cell_prop)
     ##         stroma    necrosis lymphocyte      blood       tumor ductal epithelium
@@ -170,7 +168,7 @@ Get domain-level cell proportion: each row is the cell-type proportion for the c
 
 Get interactive zones: spots with high uncertainty on domain assignment.
 ::
-    interactive_zone <- get.interactivezone(result)
+    interactive_zone <- get.interactive.zone(result)
 
     df <- data.frame(x = spot_loc$x, y = spot_loc$y, interactive_zone = interactive_zone)
     ggplot(df, aes(x = x, y = y, color = as.factor(interactive_zone))) +           
@@ -201,15 +199,15 @@ Domain-specific Spatially Variable Gene Detection
 
 The second step of iIMPACT is to detect domain-specific SV genes based on the domains identified by the previous step via a negative binomial regression model.
 
-Before fitting the regression model, we need to filter out genes with a high proportion of zero counts. 'filter.count' takes count matrix as input and can output genes (columns) with non-zero entries equal or greater than 'min_percentage'.
+Before fitting the regression model, we need to filter out genes with a high proportion of zero counts. `filter.count` function takes count matrix as input and can output genes (columns) with non-zero entries equal or greater than 'min_percentage'.
 :: 
     count_f <- filter.count(count, min_percentage = 0.3)
 
-We also need the estimated size factor in the regression model. 'get.size.factor' can estimate size factor through different methods. Here we apply total sum scaling (tss) method by setting the parameter 'norm_method' as 'tss'.
+We also need the estimated size factor in the regression model. `get.size.factor` function can estimate size factor through different methods. Here we apply total sum scaling (tss) method by setting the parameter 'norm_method' as 'tss'.
 ::
     size_factor <- get.size.factor(count_f, 'tss')
 
-In the second stage of iIMPACT, a negative binomial regression model is fitted for a pre-specified spatial domain, and then domain-specific spatially variable genes can be defined via the output p-values. 'detect.domainSVG' takes filtered count matrix, spatial domain assignment results from the previous step, target domain index, and estimated size factor as input, and outputs the estimated coefficients for domain assignment covariate and corresponding p-values for all genes.
+In the second stage of iIMPACT, a negative binomial regression model is fitted for a pre-specified spatial domain, and then domain-specific spatially variable genes can be defined via the output p-values. `detect.domainSVG` takes the filtered count matrix, spatial domain assignment results from the previous step, target domain index, and estimated size factor as input, and outputs the estimated coefficients for domain assignment covariate and corresponding p-values for all genes.
 ::
     # set the domain for domain-specific spatially variable genes
     domain_index <- 1
