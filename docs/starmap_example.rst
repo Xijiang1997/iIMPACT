@@ -52,8 +52,8 @@ The first step to handle the imaging-based SRT data is to manually add grids wit
         points(spot_loc[, 'y'], spot_loc[ ,'x'], cex = 2, pch = 16)
 
 .. figure:: plot_starmap_grid.png
-    :align: center
-    :figwidth: 1000px
+   :width: 80%
+   :align: center
 
 Generate cell abundance, low-dimensional representation of molecular profiles, and neighborhood information
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,8 +109,9 @@ After obtaining the posterior samples of Bayesian mixture model via the `run.iIM
           geom_point()
 
 .. figure:: plot_starmap_domain.png
-    :align: center
-    :figwidth: 1000px
+   :width: 80%
+   :align: center
+
 
 
 
