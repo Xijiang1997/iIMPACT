@@ -1,7 +1,7 @@
 
 # ***README***
 # The following script is used to run the iIMPACT method for spatial transcriptomics data
-# proposed in the submitted manuscript titled "XXXX"
+# proposed in the submitted manuscript titled "Integrating Image and Molecular Profiles for Spatial Transcriptomics Analysis"
 # ***END***
 
 
