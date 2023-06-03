@@ -180,7 +180,7 @@ create.grid <- function(cell_info, size = NULL){
 process.imaging.based.SRT <- function(count, cell_info, cell_assignment, n_PC = 3){
   n_spot <- max(cell_assignment)
   cell_type <- cell_info[ ,3]
-  Y_cell <- process_gene_expression(count, n_PC)
+  Y_cell <- process.gene.expression(count, n_PC)
   
   cell_names <- unique(cell_type)
   V <- matrix(0, ncol = length(cell_names) , nrow = n_spot)
